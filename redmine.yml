@@ -1,0 +1,9 @@
+---
+- hosts: redmine
+  become: yes
+  roles:
+    - common
+    - ruby
+    - mysql
+    - nginx
+    - redmine

@@ -1,0 +1,29 @@
+---
+# Rubyビルドに必要なツールがインストールされている
+- name: Ensure Ruby build tools are installed
+  yum: name={{ item.name }} state={{ item.state }}
+  with_items: "{{ ruby_build_tools }}"
+
+# rbyenvがインストールされている
+- name: Ensure rbenv is installed
+  git: repo={{ ruby_rbenv.uri }} version={{ ruby_rbenv.version }}
+    dest={{ ruby_rbenv_prefix }}
+- name: Ensure ruby-build plugin is installed
+  git: repo={{ ruby_rbenv_rubybuild_plugin.uri }} version={{ ruby_rbenv_rubybuild_plugin.version }}
+    dest={{ ruby_rbenv_prefix }}/plugins/ruby-build
+- name: Ensure rbenv path is added
+  template: src=rbenv.sh.j2 dest=/etc/profile.d/rbenv.sh mode=644
+
+# Rubyがインストールされている
+- name: Ensure Ruby is installed
+  shell: . /etc/profile.d/rbenv.sh &&
+    rbenv install {{ ruby_version }} && rbenv rehash && rbenv global {{ ruby_version }}
+  args:
+    creates: "{{ ruby_rbenv_prefix }}/versions/{{ ruby_version }}"
+
+# Bundlerがインストールされている
+- name: Ensure Bundler is installed
+  shell: . /etc/profile.d/rbenv.sh &&
+    {{ ruby_rbenv_prefix }}/shims/gem install bundler
+  args:
+    creates: "{{ ruby_rbenv_prefix }}/shims/bundle"

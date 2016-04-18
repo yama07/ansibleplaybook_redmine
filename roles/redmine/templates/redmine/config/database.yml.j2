@@ -1,0 +1,7 @@
+production:
+  adapter: mysql2
+  database: {{ redmine_db_conf.database }}
+  host: {{ redmine_db_conf.host }}
+  username: {{ redmine_db_conf.username }}
+  password: "{{ redmine_db_conf.password }}"
+  encoding: utf8

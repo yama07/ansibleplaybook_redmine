@@ -1,0 +1,6 @@
+---
+# 共通で使用するツール
+common_tools:
+  - { name: "@Development tools", state: latest }
+  - { name: "epel-release"      , state: latest }
+  - { name: "git"               , state: latest }

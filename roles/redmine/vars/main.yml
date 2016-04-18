@@ -1,0 +1,12 @@
+---
+# Redmineビルドに必要なツール
+redmine_tools:
+  - { name: "openssl-devel",      state: latest }
+  - { name: "readline-devel",     state: latest }
+  - { name: "zlib-devel",         state: latest }
+  - { name: "curl-devel",         state: latest }
+  - { name: "libyaml-devel",      state: latest }
+  - { name: "libffi-devel",       state: latest }
+  - { name: "ImageMagick",        state: latest }
+  - { name: "ImageMagick-devel",  state: latest }
+  - { name: "ipa-pgothic-fonts",  state: latest }

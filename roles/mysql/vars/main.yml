@@ -1,0 +1,6 @@
+---
+# インストールするMySQLパッケージ
+mysql_packages:
+  - { name: "mysql-devel"  }
+  - { name: "mysql-server" }
+  - { name: "MySQL-python" }

@@ -1,0 +1,10 @@
+production:
+  email_delivery:
+    delivery_method: :smtp
+    smtp_settings:
+      address: "{{ redmine_email_conf.address }}"
+      port: {{ redmine_email_conf.port }}
+      domain: "{{ redmine_email_conf.domain }}"
+
+  rmagick_font_path: /usr/share/fonts/ipa-pgothic/ipagp.ttf
+  attachments_storage_path: {{ redmine_attachments_storage_path }}

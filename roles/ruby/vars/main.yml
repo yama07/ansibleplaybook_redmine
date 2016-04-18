@@ -1,0 +1,7 @@
+---
+# Rubyビルドに必要なツール
+ruby_build_tools:
+  - { name: "openssl-devel",      state: latest }
+  - { name: "readline-devel",     state: latest }
+  - { name: "zlib-devel",         state: latest }
+  - { name: "curl-devel",         state: latest }

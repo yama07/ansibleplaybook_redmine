@@ -1,0 +1,7 @@
+---
+# Redmineを起動
+- name: Start Redmine
+  service: name=redmine state=started
+# Redmineを再起動
+- name: Restart Redmine
+  service: name=redmine state=restarted

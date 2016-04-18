@@ -1,0 +1,18 @@
+---
+# rbenvのインストール先
+ruby_rbenv_prefix: /opt/rbenv
+
+# rbenvのダウンロード先情報
+ruby_rbenv: {
+  uri: 'https://github.com/sstephenson/rbenv.git',
+  version: "master"
+}
+
+# rubybuild pluginのダウンロード先情報
+ruby_rbenv_rubybuild_plugin: {
+  uri: 'https://github.com/sstephenson/ruby-build.git',
+  version: "master"
+}
+
+# Rubyのバージョン
+ruby_version: "2.2.0"

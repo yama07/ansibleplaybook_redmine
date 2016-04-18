@@ -1,0 +1,3 @@
+---
+# nginxのコンフィグディレクトリ
+nginx_conf: /etc/nginx

@@ -1,0 +1,66 @@
+---
+# Unicornインストール済み
+- name: Ensure Gemfile.local exists
+  shell: echo "gem 'unicorn'" > Gemfile.local
+  args:
+    chdir: "{{ redmine_prefix }}"
+    creates: Gemfile.local
+  register: result_gemfile_local
+- name: Ensure Unicorn gem is installed
+  shell: . /etc/profile && bundle install --without development test --path vendor/bundle
+  args: 
+    chdir: "{{ redmine_prefix }}"
+  when: result_gemfile_local | changed
+
+# Unicorn設定ファイル配置済み
+- name: Ensure unicorn conf is set
+  template: src=redmine/config/unicorn.rb.j2 dest="{{ redmine_prefix }}/config/unicorn.rb" backup=yes
+
+# Rails設定ファイル配置済み
+- name: Ensure rails conf is set
+  template: src=redmine/config.ru.j2 dest="{{ redmine_prefix }}/config.ru" backup=yes
+
+# Unicorn起動グループ/ユーザが存在している
+- name: Ensure Unicorn invorking group exists
+  group: name={{ unicorn_invoking.group }} state=present
+- name: Ensure Unicorn invorking user exists
+  user: name={{ unicorn_invoking.user }} group={{ unicorn_invoking.group }}
+    home={{ unicorn_invoking.home }} shell={{ unicorn_invoking.shell }} state=present
+
+# nginx用Unicorn設定ファイル配置済み
+- name: Ensure nginx-unicorn conf is set
+  template: src=nginx/Redmine.conf.j2 dest={{ nginx_conf }}/conf.d/Redmine.conf
+
+# Redmineのファイル領域のオーナー/グループがUnicorn起動ユーザ/グループである
+- name: Ensure Redmine directory owner/group is unicorn invoking user/group
+  file: path={{ redmine_prefix }} state=directory recurse=yes
+    owner={{ unicorn_invoking.user }} group={{ unicorn_invoking.group }}
+
+# Systemdが利用可能かどうかチェック
+- name: Check systemd
+  file: path=/usr/lib/systemd/systemd state=file
+  register: is_available_systemd
+  ignore_errors: true
+
+# Unicorn起動スクリプト/ユニットファイル配置済み
+- name: Ensure unicorn unit-file is set (systemd)
+  template: src=init/redmine.service.j2 dest=/usr/lib/systemd/system/redmine.service
+  register: result_unicorn_unit_file_set
+  when: is_available_systemd|success
+- name: Ensure unicorn run-script is set (upstart)
+  template: src=init/redmine.j2 dest=/etc/init.d/redmine mode=755
+  register: result_unicorn_run_script_set
+  when: is_available_systemd|failed
+
+# Unicorn起動スクリプト/ユニットファイル登録済み
+- name: Ensure unicorn unit-file is registered (systemd)
+  command: systemctl daemon-reload
+  when: (is_available_systemd|success) and (result_unicorn_unit_file_set|changed)
+- name: Ensure unicorn run-script file is registered (upstart)
+  command: chkconfig --add redmine
+  when: (is_available_systemd|failed)  and (result_unicorn_run_script_set|changed)
+
+# Unicorn自動起動設定済み
+- name: Ensure unicorn is enabled
+  service: name=redmine enabled=yes
+  notify: Start Redmine

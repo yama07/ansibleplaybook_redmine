@@ -1,0 +1,73 @@
+---
+# Redmineビルドに必要なツールがインストールされている
+- name: Ensure Redmine tools are installed
+  yum: name={{ item.name }} state={{ item.state }}
+  with_items: "{{ redmine_tools }}"
+
+# Redmineソースダウンロード済み
+- name: Ensure Redmine src exist
+  get_url: url={{ redmine_uri }} dest={{ redmine_src_prefix }}
+
+# Redmineソース解凍済み
+- name: Ensure Redmine src is unarchived
+  shell: tar xvfz redmine-{{ redmine_version }}.tar.gz &&
+    mv redmine-{{ redmine_version }} {{ redmine_prefix }}
+  args:
+    chdir: "{{ redmine_src_prefix }}"
+    creates: "{{ redmine_prefix }}"
+
+# MySQLが起動済み
+- name: Ensure MySQL service is started
+  service: name=mysqld state=started
+
+# Redmineデータベースが存在している
+- name: Redmine database exists
+  mysql_db: login_user=root login_password={{ mysql_root_password }}
+    db={{ redmine_db_conf.database }} encoding=utf8 state=present
+
+# Redmine MySQLユーザが存在している
+- name: Ensure Redmine MySQL user exists
+  mysql_user: login_user=root login_password={{ mysql_root_password }}
+    name={{ redmine_db_conf.username }} password={{ redmine_db_conf.password }}
+    host=localhost priv='db_redmine.*:ALL,GRANT'
+
+# Redmineデータベース設定ファイルがセットされている
+- name: Ensure Redmine database conf is set
+  template: src=redmine/config/database.yml.j2 dest={{ redmine_prefix }}/config/database.yml
+
+# Redmineコンフィグレーションファイルがセットされている
+- name: Ensure Redmine configuration is set
+  template: src=redmine/config/configuration.yml.j2 dest={{ redmine_prefix }}/config/configuration.yml
+
+# gemパッケージインストール済み
+- name: Ensure gem packages are installed
+  shell: . /etc/profile && bundle install --without development test --path vendor/bundle
+  args: 
+    chdir: "{{ redmine_prefix }}"
+    creates: vendor/bundle
+  register: result_gem_packages_install
+
+# セッション改ざん防止用秘密鍵の作成
+- name: Generate Redmine secret token
+  shell: . /etc/profile && bundle exec rake generate_secret_token
+  args:
+    chdir: "{{ redmine_prefix }}"
+  when: result_gem_packages_install | changed
+
+# データベースのテーブル作成
+- name: Create Redmine database
+  shell: . /etc/profile && RAILS_ENV=production bundle exec rake db:migrate
+  args:
+    chdir: "{{ redmine_prefix }}"
+  when: result_gem_packages_install | changed
+
+# デフォルトデータの登録
+- name: Add Redmine default data
+  shell: . /etc/profile && RAILS_ENV=production REDMINE_LANG=ja bundle exec rake redmine:load_default_data
+  args:
+    chdir: "{{ redmine_prefix }}"
+  when: result_gem_packages_install | changed
+
+# MySQLが停止済み
+- name: Ensure MySQL service is stopped
+  service: name=mysqld state=stopped

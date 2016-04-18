@@ -1,0 +1,6 @@
+---
+# MySQL rootユーザのパスワード
+mysql_root_password: rootroot
+
+# MySQL DBディレクトリ
+mysql_data_dir: "/var/lib/mysql"

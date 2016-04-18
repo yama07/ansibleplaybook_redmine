@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+# redmine Startup script for unicorn.
+#
+# chkconfig: - 86 15
+# description: redmine on unicorn start/stop script.
+
+#
+# set rbenv environment valiables
+#
+export RUBY_HOME={{ ruby_rbenv_prefix }}/versions/{{ ruby_version }}
+export PATH=$PATH:${RUBY_HOME}/bin
+
+set -u
+set -e
+
+APP_ROOT="{{ redmine_prefix }}"
+CONFIGS="$APP_ROOT/config/unicorn.rb"
+PID="$APP_ROOT/tmp/pids/unicorn.pid"
+ENV=production
+
+UNICORN_OPTS="-D -E $ENV -c $CONFIGS --path /redmine -p 8080"
+
+old_pid="$PID.oldbin"
+
+cd $APP_ROOT || exit 1
+
+sig(){
+  test -s "$PID" && kill -$1 `cat $PID`
+}
+
+oldsig(){
+  test -s $old_pid && kill -$1 `cat $old_pid`
+}
+
+case $1 in
+start)
+  sig 0 && echo >&2 "Already running" && exit 0
+  cd $APP_ROOT ; bundle exec unicorn_rails $UNICORN_OPTS
+  ;;
+stop)
+  sig QUIT && exit 0
+  echo >&2 "Not running"
+  ;;
+force-stop)
+  sig TERM && exit 0
+  echo >&2 "Not running."
+  ;;
+restart|reload)
+  sig HUP && echo reloaded OK && exit 0
+  echo >&2 "Couldn't reload, starting instead"
+  bundle exec unicorn_rails $UNICORN_OPTS
+  ;;
+upgrade)
+  sig USR2 && exit 0
+  echo >&2 "Couldn't upgrade, starting instead"
+  bundle exec unicorn_rails $UNICORN_OPTS
+  ;;
+rotate)
+  sig USR1 && echo rotated logs OK && exit 0
+  echo >&2 "Couldn't rotate logs" && exit 1
+  ;;
+*)
+  echo >&2 "Usage: $0 <start|stop|restart|upgrade|rotate|force-stop>"
+  exit 1
+  ;;
+esac

@@ -1,0 +1,53 @@
+---
+###################################
+##     Redmine
+###################################
+
+# Redminのバージョン
+redmine_version: 3.2.0
+
+# Redmineのダウンロード先
+redmine_uri: http://www.redmine.org/releases/redmine-{{ redmine_version }}.tar.gz
+
+# Redmineのソース配置先
+redmine_src_prefix: /usr/local/src
+
+# Redmineのインストール先
+redmine_prefix: /var/lib/redmine
+
+# Redmineデータベース設定
+redmine_db_conf: {
+  database: "db_redmine",
+  host: "localhost",
+  username: "user_redmine",
+  password: "redmineredmine"
+}
+
+# Redmineメール設定
+redmine_email_conf: {
+  address: "localhost",
+  port: 25,
+  domain: "example.com"
+}
+
+# Redmineアタッチメントファイルパス
+redmine_attachments_storage_path: "{{ redmine_prefix }}/files"
+
+
+###################################
+##     Unicorn
+###################################
+
+# Unicornの起動ユーザ情報
+unicorn_invoking: {
+  user:  "redmine",
+  group: "redmine",
+  home: "{{ redmine_prefix }}",
+  shell: "/sbin/nologin"
+}
+
+# Unicorn ワーカープロセス数
+unicorn_worker_processes: 2
+
+# Unicornサーバ名
+unicorn_server_name: "{{ ansible_hostname }}"

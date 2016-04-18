@@ -1,0 +1,25 @@
+---
+# nginxがインストールされている
+- name: Ensure nginx is installed
+  yum: name=nginx
+
+# nginxが自動起動設定済み
+- name: Ensure nginx service is enanabled
+  service: name=nginx enabled=yes
+  notify: Start nginx
+
+# iptablesが利用可能かどうかチェック
+- name: Check iptables is enabled
+  file: path=/etc/sysconfig/iptables state=file
+  register: is_iptables_enabled
+  ignore_errors: yes
+
+# HTTPポート解放済み
+- name: Ensure http port is opend (iptables)
+  lineinfile: dest=/etc/sysconfig/iptables insertafter='^:OUTPUT' line="-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT"
+  when: is_iptables_enabled|success
+  notify: Restart iptables
+- name: Ensure http port is opened (firewall-cmd)
+  firewalld: service=http permanent=true state=enabled
+  when: is_iptables_enabled|failed
+  notify: Restart firewalld

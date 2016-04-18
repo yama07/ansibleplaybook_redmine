@@ -1,0 +1,5 @@
+---
+# ツールがインストールされている
+- name: Ensure tools are installed
+  yum: name={{ item.name }} state={{ item.state }}
+  with_items: "{{ common_tools }}"

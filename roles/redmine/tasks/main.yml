@@ -1,0 +1,5 @@
+---
+# Redmineのインストール
+- include: redmine.yml
+# Unicornのインストール
+- include: unicorn.yml
